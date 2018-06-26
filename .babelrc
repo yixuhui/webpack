@@ -1,0 +1,16 @@
+{
+  "presets": ["env"],
+  "plugins": [
+    "transform-async-to-generator",
+    "syntax-dynamic-import",
+    ["transform-runtime", {
+      "helpers": false,
+      "polyfill": false,
+      "regenerator": true,
+      "moduleName": "babel-runtime"
+    }]
+  ],
+  "ignore": [
+    "node_modules/"
+  ]
+}
