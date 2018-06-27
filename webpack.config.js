@@ -1,6 +1,7 @@
 const path = require('path');
 const HTMLPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
+const ExtractPlugin = require('extract-text-webpack-plugin');
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -29,7 +30,7 @@ module.exports = {
     }
   },
   devServer: {
-    port: 8080,
+    port: 4200,
     host: '0.0.0.0',
     overlay: {
       errors: true,
@@ -49,20 +50,25 @@ module.exports = {
       include: [resolve('src'), resolve('node_modules/webpack-dev-server/client')]
     }, {
       test: /\.scss$/,
-      use: ['style-loader', {
-        loader: 'css-loader',
-        options: {
-          sourceMap: true,
-          minimize: true
-        }
-      },
-        'postcss-loader',
-      {
-        loader: 'sass-loader',
-        options: {
-          sourceMap: true
-        }
-      }],
+
+      // 将所有的入口 chunk(entry chunks)中引用的 *.css，移动到独立分离的 CSS 文件
+      use: ExtractPlugin.extract({
+        fallback: 'style-loader',   // 如果不提取的话用什么处理
+        use: [{
+          loader: 'css-loader',
+          options: {
+            sourceMap: true,
+            minimize: !isDev
+          }
+        },
+          'postcss-loader',
+          {
+            loader: 'sass-loader',
+            options: {
+              sourceMap: true
+            }
+          }]
+      }),
       include: path.resolve(__dirname, 'src'),
       exclude: path.resolve(__dirname, 'node_modules')
     }, {
@@ -115,6 +121,11 @@ module.exports = {
 
 
       // 所有的javascript脚本默认添加在body标签最后面，可以通过inject: 'head'改变
+    }),
+
+    // 一下插件推荐在production中配置
+    new ExtractPlugin({
+      filename: '[name].min.css'
     })
   ]
 }
