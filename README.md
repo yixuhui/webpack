@@ -1,2 +1,2 @@
 # webpack
-学习webpack
+配置typescript
