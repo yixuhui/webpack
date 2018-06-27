@@ -7,13 +7,17 @@ const isDev = process.env.NODE_ENV === 'development';
 module.exports = {
   mode: process.env.NODE_ENV || 'production',
   target: 'web',
-  entry: path.join(__dirname, 'src/ts/index.ts'),
+  entry: {
+    pageA: './src/ts/pageA.ts',
+    pageB: './src/ts/pageB.ts'
+  },
   output: {
     // chunk可以理解为一个块，即entry中对应的入口
     // hash指本次打包的hash值，那么所有输出的hash值都一样
     // chunkhash指本次打包，给每个入口都分配不同的hash值输出
     // 只有当文件内容改变后，chunkhash才会变化
-    filename: 'ts/bundle.[hash:8].js',
+    filename: 'ts/[name].bundle.js',
+    chunkFilename: 'ts/[name].chunk.js',
     path: path.join(__dirname, 'dist')
 
     // 默认情况资源文件的请求都会引用相对路径，比如：<script src="ts/aaa.ts"></script>
@@ -37,6 +41,14 @@ module.exports = {
     // hot: true,
     historyApiFallback: {
       index: '/src/index.html'
+    }
+  },
+
+  // 打包公共代码
+  optimization: {
+    splitChunks: {
+      name: 'common',     // 打包公共代码的文件名
+      minChunks: 2        // 出现两次以上就打包
     }
   },
   module: {
