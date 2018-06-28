@@ -130,7 +130,10 @@ module.exports = {
       // 缓存文件默认true  cache: true
 
 
-      // 所有的javascript脚本默认添加在body标签最后面，可以通过inject: 'head'改变
+      // 所有的外部脚本默认添加在body标签最后面，可以通过inject: 'head'改变
+
+      // 默认会把所有外部脚本都插入(inject !== false的情况下)，可以指定chunks
+      // chunks: ['app']   只插入app(如果存在)入口相关的脚本
     }),
 
     // 一下插件推荐在production中配置
