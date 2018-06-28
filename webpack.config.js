@@ -5,6 +5,10 @@ const ExtractPlugin = require('extract-text-webpack-plugin');
 
 const isDev = process.env.NODE_ENV === 'development';
 
+const postCssPlugins = isDev ? [] : [require('postcss-sprites')({
+  spritePath: './dist/assests/sprite'
+}), require('autoprefixer')()];
+
 module.exports = {
   mode: process.env.NODE_ENV || 'production',
   target: 'web',
@@ -61,7 +65,13 @@ module.exports = {
             minimize: !isDev
           }
         },
-          'postcss-loader',
+          {
+            loader: 'postcss-loader',
+            options: {
+              arser: 'sugarss',
+              plugins: postCssPlugins
+            }
+          },
           {
             loader: 'sass-loader',
             options: {
@@ -74,13 +84,12 @@ module.exports = {
     }, {
       test: /\.(gif|jpg|jpeg|png|svg)$/,
       use: [
-      /*  {
-          loader: 'file-loader',
-          options: {
-            name: 'assets/[name]-[hash:8].[ext]'
-          }
-        },*/
-        'image-webpack-loader', // 压缩图片
+        /*  {
+         loader: 'file-loader',
+         options: {
+         name: 'assets/[name]-[hash:8].[ext]'
+         }
+         },*/
         {
           loader: 'url-loader',
           options: {
@@ -89,7 +98,8 @@ module.exports = {
             // 静态资源生成的文件目录,与原目录路径统一，但是不会进行编码了
             name: '[path]/[name]-[hash:8].[ext]'
           }
-        }
+        },
+        'image-webpack-loader' // 压缩图片
       ]
     }, {
       // 在html中加载图片
