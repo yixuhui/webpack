@@ -1,3 +1,5 @@
 import 'style/index.scss';
 
-console.log(1);
+$.get('/v2/book/1220562', function (data) {
+  console.log(data);
+})

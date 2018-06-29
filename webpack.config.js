@@ -1,7 +1,6 @@
 const path = require('path');
 const HTMLPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
-const ExtractPlugin = require('extract-text-webpack-plugin');
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -39,9 +38,27 @@ module.exports = {
     overlay: {
       errors: true,
     },
-    // hot: true,
-    historyApiFallback: {
-      index: '/src/index.html'
+    hot: true,
+
+    // 任意的 404 响应都可能需要被替代为 index.html
+    historyApiFallback: true,
+    proxy: {
+      //  context: ["/auth", "/api"]  同时代理多个，这样就可以抽出公共配置
+      '/v2': {
+        target: 'https://api.douban.com',
+        changeOrigin: true,
+        logLevel: 'debug'
+        // headers: {
+        //   'content-type': 'application/html'
+        // }
+
+        // secure: false    接收https
+
+        // 路径重定向，相当于是给路径起别名，一般用于简化前台的请求路劲
+        // pathRewrite: {
+        //   '^/api/remove/path' : '/path'
+        // }
+      }
     }
   },
   module: {
@@ -56,7 +73,7 @@ module.exports = {
       test: /\.scss$/,
 
       // 将所有的入口 chunk(entry chunks)中引用的 *.css，移动到独立分离的 CSS 文件
-      use: ExtractPlugin.extract({
+      use: {
         fallback: 'style-loader',   // 如果不提取的话用什么处理
         use: [{
           loader: 'css-loader',
@@ -78,7 +95,7 @@ module.exports = {
               sourceMap: true
             }
           }]
-      }),
+      },
       include: path.resolve(__dirname, 'src'),
       exclude: path.resolve(__dirname, 'node_modules')
     }, {
@@ -108,7 +125,11 @@ module.exports = {
     }]
   },
   plugins: [
+    // 这两个是模块热更新插件
     new webpack.HotModuleReplacementPlugin(),
+    new webpack.NamedModulesPlugin(),
+
+
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: isDev ? '"development"' : '"production"'
