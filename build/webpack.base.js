@@ -1,11 +1,11 @@
 const path = require('path');
-const HTMLPlugin = require('html-webpack-plugin');
-const webpack = require('webpack');
-const ExtractPlugin = require('extract-text-webpack-plugin');
-
 const developmentConfig = require('./webpack.dev');
 const productionConfig = require('./webpack.prod');
 
+
+const fileloader = require('./loaders/file-loader');
+const styleloader = require('./loaders/style-loader');
+const plugin = require('./webpack.plugins');
 const merge = require('webpack-merge');
 
 
@@ -13,88 +13,11 @@ const merge = require('webpack-merge');
 const baseConfig = env => {
   const isDev = env === 'development';
 
-  const postCssPlugins = isDev ? [] : [require('postcss-sprites')({
-    spritePath: './dist/assests/sprite'
-  }), require('autoprefixer')()];
+  const styleLoader = styleloader(isDev);
 
-  const styleBaseConfig = [
-    {
-      loader: 'css-loader',
-      options: {
-        sourceMap: !isDev,
-        minimize: !isDev
-      }
-    },
-    {
-      loader: 'postcss-loader',
-      options: {
-        arser: 'sugarss',
-        plugins: postCssPlugins
-      }
-    },
-    {
-      loader: 'sass-loader',
-      options: {
-        sourceMap: !isDev
-      }
-    }
-  ];
+  const fileLoader = fileloader(isDev);
 
-  const styleLoader = env === 'development' ? ['style-loader'].concat(styleBaseConfig) :
-    ExtractPlugin.extract({
-    fallback: 'style-loader',   // 如果不提取的话用什么处理
-    use: styleBaseConfig
-  });
-
-
-  const fileLoader = env === 'development' ? [
-      {
-        loader: 'file-loader',
-        options: {
-          name: 'assets/[name]-[hash:8].[ext]'
-        }
-      }
-    ] : [
-    {
-      loader: 'url-loader',
-      options: {
-        // 当url指向的文件<10240b, 就把url进行base64编码，否则丢给file-loader处理
-        limit: 10240,
-        // 静态资源生成的文件目录,与原目录路径统一，但是不会进行编码了
-        name: '[path]/[name]-[hash:8].[ext]'
-      }
-    },
-    'image-webpack-loader' // 压缩图片
-  ];
-
-  const HTMLPluginOptions = {
-    template: path.resolve(__dirname, '..', 'src/index.html'),
-    minify: {
-      collapseInlineTagWhitespace: !isDev
-    }
-  }
-
-
-  const defaultPlugins = [
-    new webpack.DefinePlugin({
-      'process.env': {
-        NODE_ENV: isDev ? '"development"' : '"production"'
-      }
-    }),
-    new HTMLPlugin(HTMLPluginOptions)
-  ];
-
-
-
-  const plugins = env === 'development' ?
-    defaultPlugins.concat([
-      new webpack.HotModuleReplacementPlugin()
-    ]) :
-    defaultPlugins.concat([
-      new ExtractPlugin({
-        filename: '[name].min.css'
-      })
-    ]);
+  const plugins = plugin(isDev);
 
   return {
     mode: process.env.NODE_ENV || 'production',
@@ -155,5 +78,5 @@ module.exports = env => {
 
 
 function resolve (dir) {
-  return path.join(__dirname, '..', dir)
+  return path.join(__dirname, '..', dir);
 }
