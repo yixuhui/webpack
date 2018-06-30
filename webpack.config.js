@@ -2,48 +2,25 @@ const path = require('path');
 const HTMLPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 const ExtractPlugin = require('extract-text-webpack-plugin');
+const merge = require('webpack-merge');
 
-const isDev = process.env.NODE_ENV === 'development';
-
-const postCssPlugins = isDev ? [] : [require('postcss-sprites')({
-  spritePath: './dist/assests/sprite'
-}), require('autoprefixer')()];
-
-module.exports = {
-  mode: process.env.NODE_ENV || 'production',
-  target: 'web',
-  entry: path.join(__dirname, 'src/js/index.js'),
+const baseConfig = {
+  entry: {
+    react: ['react']
+  },
   output: {
-    // chunk可以理解为一个块，即entry中对应的入口
-    // hash指本次打包的hash值，那么所有输出的hash值都一样
-    // chunkhash指本次打包，给每个入口都分配不同的hash值输出
-    // 只有当文件内容改变后，chunkhash才会变化
-    filename: 'js/bundle.[hash:8].js',
-    path: path.join(__dirname, 'dist')
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'js/[name].[chunkhash].js'
+  },
 
-    // 默认情况资源文件的请求都会引用相对路径，比如：<script src="js/aaa.js"></script>
-    // 如果设置了publicPath: 'http://cdn.com', 就会变成<script src="http://cdn.com/js/aaa.js"></script>
-    // 一般用于上线后，有自己的cdn
-  },
-  resolve: {
-    extensions: ['.js', '.json', '.scss'],
-    alias: {
-      '@': resolve('src'),
-      'style': resolve('src/style'),
-      'js': resolve('src/js')
-    }
-  },
-  devServer: {
-    port: 4200,
-    host: '0.0.0.0',
-    overlay: {
-      errors: true,
+  // 打包公共代码
+  optimization: {
+    splitChunks: {
+      chunks: 'all'
     },
-    // hot: true,
-    historyApiFallback: {
-      index: '/src/index.html'
-    }
+    runtimeChunk: true
   },
+
   module: {
     rules: [{
       test: /\.js$/,
@@ -51,7 +28,7 @@ module.exports = {
 
       // 下面这两个配置可以是正则，或绝对路径，或 绝对路径[]
       // exclude: /node_modules/,
-      include: [resolve('src'), resolve('node_modules/webpack-dev-server/client')]
+      include: [path.resolve(__dirname, 'src'), path.resolve(__dirname, 'node_modules/webpack-dev-server/client')]
     }, {
       test: /\.scss$/,
 
@@ -61,17 +38,9 @@ module.exports = {
         use: [{
           loader: 'css-loader',
           options: {
-            sourceMap: true,
-            minimize: !isDev
+            sourceMap: true
           }
         },
-          {
-            loader: 'postcss-loader',
-            options: {
-              arser: 'sugarss',
-              plugins: postCssPlugins
-            }
-          },
           {
             loader: 'sass-loader',
             options: {
@@ -79,8 +48,7 @@ module.exports = {
             }
           }]
       }),
-      include: path.resolve(__dirname, 'src'),
-      exclude: path.resolve(__dirname, 'node_modules')
+      include: path.resolve(__dirname, 'src')
     }, {
       test: /\.(gif|jpg|jpeg|png|svg)$/,
       use: [
@@ -108,41 +76,65 @@ module.exports = {
     }]
   },
   plugins: [
-    new webpack.HotModuleReplacementPlugin(),
-    new webpack.DefinePlugin({
-      'process.env': {
-        NODE_ENV: isDev ? '"development"' : '"production"'
-      }
-    }),
-    new HTMLPlugin({
-      // template: path.join(__dirname, 'src/index.html')
-      // 默认就是当前根目录，依据context配置项
-      template: 'src/index.html',
-
-      // 文件名默认和template一样，当然可以自定义
-      filename: 'index.html',
-
-      // 压缩配置 https://github.com/kangax/html-minifier#options-quick-reference
-      minify: {
-        collapseInlineTagWhitespace: true       // 删空格
-      }
-
-      // 缓存文件默认true  cache: true
-
-
-      // 所有的外部脚本默认添加在body标签最后面，可以通过inject: 'head'改变
-
-      // 默认会把所有外部脚本都插入(inject !== false的情况下)，可以指定chunks
-      // chunks: ['app']   只插入app(如果存在)入口相关的脚本
-    }),
-
-    // 一下插件推荐在production中配置
     new ExtractPlugin({
-      filename: '[name].min.css'
+      filename: 'css/[name]-[hash:8].min.css'
     })
   ]
 }
 
-function resolve (dir) {
-  return path.join(__dirname, '.', dir)
+
+const pages = [
+  generatPage({
+    title: 'page A',
+    entry: {
+      a: './src/pages/a'
+    },
+    filename: 'a',
+    chunks: ['react', 'a']
+  }),
+  generatPage({
+    title: 'page B',
+    entry: {
+      b: './src/pages/b'
+    },
+    filename: 'b',
+    chunks: ['react', 'b']
+  }),
+  generatPage({
+    title: 'page C',
+    entry: {
+      c: './src/pages/c'
+    },
+    filename: 'c',
+    chunks: ['react', 'c']
+  })
+]
+
+
+
+function generatPage ({
+                        title = '',
+                        entry = '',
+                        template = './src/index.html',
+                        filename = '',
+                        chunks = []
+                      } = {}) {
+  return {
+    entry,
+    plugins: [
+      new HTMLPlugin({
+        title,
+        chunks,
+        template,
+        filename: filename + '.html'
+      })
+    ]
+  }
 }
+
+
+// 暴露为多页面多配置
+// module.exports = pages.map(page => merge(baseConfig, page));
+
+// 也可以暴露为单配置
+module.exports = merge([baseConfig].concat(pages));
