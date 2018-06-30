@@ -1,0 +1,7 @@
+运行 "webpack --profile --json > stats.json"
+会在项目根目录下生成stats.json
+然后在https://webpack.github.io/analyse/中查看分析结果
+
+
+另外还有来自社区的分析工具
+webpack-bundle-analyzer

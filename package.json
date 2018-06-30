@@ -6,7 +6,8 @@
   "scripts": {
     "build": "cross-env NODE_ENV=production npm run clean && webpack",
     "clean": "rimraf dist",
-    "dev": "cross-env NODE_ENV=development webpack-dev-server --config webpack.config.js"
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --config webpack.config.js",
+    "dll": "webpack --config build/webpack.dll.js"
   },
   "repository": {
     "type": "git",

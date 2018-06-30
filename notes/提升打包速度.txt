@@ -1,0 +1,4 @@
+一般第三方依赖打包一次就行了
+
+1. 新建一个专门打包第三方的脚本: build/webpack.dll.js
+2. 在主build脚本中引用webpack.DllReferencePlugin插件进行一块打包

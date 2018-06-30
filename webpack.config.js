@@ -79,8 +79,8 @@ module.exports = {
             }
           }]
       }),
-      include: path.resolve(__dirname, 'src'),
-      exclude: path.resolve(__dirname, 'node_modules')
+      include: path.resolve(__dirname, 'src')
+      // exclude: path.resolve(__dirname, 'node_modules')
     }, {
       test: /\.(gif|jpg|jpeg|png|svg)$/,
       use: [
@@ -139,7 +139,16 @@ module.exports = {
     // 一下插件推荐在production中配置
     new ExtractPlugin({
       filename: '[name].min.css'
-    })
+    }),
+
+
+    //  这个插件把只有 dll 的 bundle(们)(dll-only-bundle(s)) 引用到需要的预编译的依赖。
+    // new webpack.DllReferencePlugin({
+    //   manifest: require("../src/dll/ui-manifest.json")
+    // }),
+    // new webpack.DllReferencePlugin({
+    //   manifest: require("../src/dll/vue-manifest.json")
+    // })
   ]
 }
 
